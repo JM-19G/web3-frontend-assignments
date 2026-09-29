@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { ethers, BrowserProvider, JsonRpcSigner } from "ethers";
 
+const SUPPORTED_CHAINS: Record<number, string> = {
+  1: "Ethereum Mainnet",
+  11155111: "Sepolia",
+  137: "Polygon",
+};
+
 export function useWalletConnection() {
   const [accountAddress, setAccountAddress] = useState("");
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
@@ -8,10 +14,11 @@ export function useWalletConnection() {
   const [isLoading, setIsLoading] = useState(false);
   const [chainId, setChainId] = useState<number | null>(null);
   const [provider, setProvider] = useState<BrowserProvider | null>(null);
+  const [isUnsupportedChain, setIsUnsupportedChain] = useState(false);
 
   useEffect(() => {
     const { ethereum } = window as any;
-    
+
     const initializeEthereum = async () => {
       if (typeof window !== "undefined" && typeof ethereum !== "undefined") {
         const browserProvider = new ethers.BrowserProvider(ethereum);
@@ -25,7 +32,9 @@ export function useWalletConnection() {
           }
 
           const network = await browserProvider.getNetwork();
-          setChainId(parseInt(network.chainId.toString()));
+          const numericChainId = parseInt(network.chainId.toString());
+          setChainId(numericChainId);
+          setIsUnsupportedChain(!SUPPORTED_CHAINS[numericChainId]);
 
           ethereum.on("accountsChanged", handleAccountsChanged);
           ethereum.on("chainChanged", handleChainChanged);
@@ -45,13 +54,11 @@ export function useWalletConnection() {
     };
   }, []);
 
-  // Listen for disconnection
   const handleDisconnect = () => {
     disconnectWallet();
     console.log("Wallet disconnected");
   };
 
-  // Listen for account changes
   const handleAccountsChanged = async (accounts: string[]) => {
     if (accounts.length === 0) {
       disconnectWallet();
@@ -62,7 +69,6 @@ export function useWalletConnection() {
     }
   };
 
-  // Listen for chain changes
   const handleChainChanged = async (chainId: string) => {
     const { ethereum } = window as any;
     if (ethereum) {
@@ -73,8 +79,9 @@ export function useWalletConnection() {
         console.error(error);
       }
     }
-    const numericChainId = parseInt(chainId, 16); // Convert chainId to a number
+    const numericChainId = parseInt(chainId, 16);
     setChainId(numericChainId);
+    setIsUnsupportedChain(!SUPPORTED_CHAINS[numericChainId]);
     console.log("Chain changed to:", numericChainId);
   };
 
@@ -87,8 +94,10 @@ export function useWalletConnection() {
 
         const accounts = await browserProvider.send("eth_requestAccounts", []);
         const network = await browserProvider.getNetwork();
+        const numericChainId = parseInt(network.chainId.toString());
         setAccountAddress(accounts[0]);
-        setChainId(parseInt(network.chainId.toString()));
+        setChainId(numericChainId);
+        setIsUnsupportedChain(!SUPPORTED_CHAINS[numericChainId]);
         setSigner(await browserProvider.getSigner());
       } catch (error) {
         console.error("Error connecting wallet:", error);
@@ -102,10 +111,24 @@ export function useWalletConnection() {
     setBalance(null);
     setChainId(null);
     setProvider(null);
+    setIsUnsupportedChain(false);
 
     console.log(
       "Disconnected from wallet. Please manually disconnect from MetaMask if necessary."
     );
+  }, []);
+
+  const switchToSupportedChain = useCallback(async (targetChainId: number) => {
+    const { ethereum } = window as any;
+    if (!ethereum) return;
+    try {
+      await ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x" + targetChainId.toString(16) }],
+      });
+    } catch (error) {
+      console.error("Error switching chain:", error);
+    }
   }, []);
 
   const getBalance = useCallback(
@@ -133,8 +156,11 @@ export function useWalletConnection() {
     balance,
     isLoading,
     signer,
+    isUnsupportedChain,
+    supportedChains: SUPPORTED_CHAINS,
     connectWallet,
     disconnectWallet,
     getBalance,
+    switchToSupportedChain,
   };
 }

@@ -14,12 +14,21 @@ interface WalletContextType {
   isLoading: boolean;
   chainId: number | null;
   provider: BrowserProvider | null;
+  isUnsupportedChain: boolean;
+  supportedChains: Record<number, string>;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   getBalance: (address: string) => Promise<void>;
+  switchToSupportedChain: (targetChainId: number) => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
+
+const SUPPORTED_CHAINS: Record<number, string> = {
+  1: "Ethereum Mainnet",
+  11155111: "Sepolia",
+  137: "Polygon",
+};
 
 const WalletConnectionProvider = ({
   children,
@@ -32,6 +41,7 @@ const WalletConnectionProvider = ({
   const [isLoading, setIsLoading] = useState(false);
   const [chainId, setChainId] = useState<number | null>(null);
   const [provider, setProvider] = useState<BrowserProvider | null>(null);
+  const [isUnsupportedChain, setIsUnsupportedChain] = useState(false);
 
   useEffect(() => {
     const { ethereum } = window as any;
@@ -52,7 +62,9 @@ const WalletConnectionProvider = ({
           }
 
           const network = await browserProvider.getNetwork();
-          setChainId(parseInt(network.chainId.toString()));
+          const numericChainId = parseInt(network.chainId.toString());
+          setChainId(numericChainId);
+          setIsUnsupportedChain(!SUPPORTED_CHAINS[numericChainId]);
 
           ethereum.on("accountsChanged", handleAccountsChanged);
           ethereum.on("chainChanged", handleChainChanged);
@@ -72,13 +84,11 @@ const WalletConnectionProvider = ({
     };
   }, []);
 
-  // Listen for disconnection
   const handleDisconnect = () => {
     disconnectWallet();
     console.log("Wallet disconnected");
   };
 
-  // Listen for account changes
   const handleAccountsChanged = async (accounts: string[]) => {
     if (accounts.length === 0) {
       disconnectWallet();
@@ -89,7 +99,6 @@ const WalletConnectionProvider = ({
     }
   };
 
-  // Listen for chain changes
   const handleChainChanged = async (chainId: string) => {
     const { ethereum } = window as any;
     if (ethereum) {
@@ -100,8 +109,9 @@ const WalletConnectionProvider = ({
         console.error(error);
       }
     }
-    const numericChainId = parseInt(chainId, 16); // Convert chainId to a number
+    const numericChainId = parseInt(chainId, 16);
     setChainId(numericChainId);
+    setIsUnsupportedChain(!SUPPORTED_CHAINS[numericChainId]);
     console.log("Chain changed to:", numericChainId);
   };
 
@@ -114,8 +124,10 @@ const WalletConnectionProvider = ({
 
         const accounts = await browserProvider.send("eth_requestAccounts", []);
         const network = await browserProvider.getNetwork();
+        const numericChainId = parseInt(network.chainId.toString());
         setAccountAddress(accounts[0]);
-        setChainId(parseInt(network.chainId.toString()));
+        setChainId(numericChainId);
+        setIsUnsupportedChain(!SUPPORTED_CHAINS[numericChainId]);
         setSigner(await browserProvider.getSigner());
       } catch (error) {
         console.error("Error connecting wallet:", error);
@@ -129,10 +141,24 @@ const WalletConnectionProvider = ({
     setBalance(null);
     setChainId(null);
     setProvider(null);
+    setIsUnsupportedChain(false);
 
     console.log(
       "Disconnected from wallet. Please manually disconnect from MetaMask if necessary."
     );
+  }, []);
+
+  const switchToSupportedChain = useCallback(async (targetChainId: number) => {
+    const { ethereum } = window as any;
+    if (!ethereum) return;
+    try {
+      await ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x" + targetChainId.toString(16) }],
+      });
+    } catch (error) {
+      console.error("Error switching chain:", error);
+    }
   }, []);
 
   const getBalance = useCallback(
@@ -166,6 +192,9 @@ const WalletConnectionProvider = ({
         isLoading,
         signer,
         provider,
+        isUnsupportedChain,
+        supportedChains: SUPPORTED_CHAINS,
+        switchToSupportedChain,
       }}
     >
       {children}
