@@ -4,10 +4,13 @@ const MetamaskLocalState = () => {
   const {
     accountAddress,
     chainId,
+    balance,
+    isLoading,
     isUnsupportedChain,
     supportedChains,
     connectWallet,
     disconnectWallet,
+    getBalance,
     switchToSupportedChain,
   } = useWalletConnection();
 
@@ -23,6 +26,22 @@ const MetamaskLocalState = () => {
           <p className="text-lg">
             Chain ID: <span className="font-mono">{chainId}</span>
           </p>
+
+          <div className="space-y-2">
+            <p className="text-lg">
+              Balance:{" "}
+              <span className="font-mono">
+                {isLoading ? "Loading..." : balance !== null ? `${balance} ETH` : "—"}
+              </span>
+            </p>
+            <button
+              onClick={() => getBalance(accountAddress)}
+              disabled={isLoading}
+              className="bg-indigo-500 py-2 px-5 rounded-md text-white font-bold disabled:opacity-50"
+            >
+              {isLoading ? "Refreshing..." : "Refresh Balance"}
+            </button>
+          </div>
 
           {isUnsupportedChain && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded space-y-2">
@@ -40,6 +59,20 @@ const MetamaskLocalState = () => {
               </div>
             </div>
           )}
+
+          <div className="bg-gray-100 rounded-md p-4 text-left max-w-sm mx-auto">
+            <p className="font-bold mb-2">Supported Chains</p>
+            <ul className="space-y-1">
+              {Object.entries(supportedChains).map(([id, name]) => (
+                <li key={id} className="flex justify-between text-sm">
+                  <span>{name}</span>
+                  <span className="font-mono">
+                    {Number(id) === chainId ? "✅ current" : id}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <button
             onClick={disconnectWallet}
