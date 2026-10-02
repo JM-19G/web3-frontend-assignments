@@ -6,6 +6,7 @@ import Eip4361 from "./pages/eip-4361";
 import MetamaskGlobalState from "./pages/metamask-global-state";
 import MetamaskLocalState from "./pages/metamask-local-state";
 import WalletConnectionProvider from "./context";
+import StudentRegistration from "./pages/StudentRegistration";
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
         <Route path="/eip-4361" element={<Eip4361 />} />
         <Route path="/metamask-global-state" element={<MetamaskGlobalState />} />
         <Route path="/metamask-local-state" element={<MetamaskLocalState />} />
+        <Route path="/student-registration" element={<StudentRegistration />} />
       </Routes>
     </WalletConnectionProvider>
   );
