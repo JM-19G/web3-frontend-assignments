@@ -7,6 +7,7 @@ import MetamaskGlobalState from "./pages/metamask-global-state";
 import MetamaskLocalState from "./pages/metamask-local-state";
 import WalletConnectionProvider from "./context";
 import StudentRegistration from "./pages/StudentRegistration";
+import Crowdfunding from "./pages/crowdfunding";
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
         <Route path="/metamask-global-state" element={<MetamaskGlobalState />} />
         <Route path="/metamask-local-state" element={<MetamaskLocalState />} />
         <Route path="/student-registration" element={<StudentRegistration />} />
+        <Route path="/crowdfunding" element={<Crowdfunding />} />
       </Routes>
     </WalletConnectionProvider>
   );
