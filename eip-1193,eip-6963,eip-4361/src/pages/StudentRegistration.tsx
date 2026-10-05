@@ -91,9 +91,30 @@ const StudentRegistration = () => {
 
   const shortenAddress = (address: string) => `${address.slice(0, 6)}...${address.slice(-4)}`;
 
+  const cardClass =
+    "bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-lg shadow-black/20";
+
+  // Fixed height so both main cards are identical, no matter their content.
+  const staggerCardClass = `${cardClass} w-full h-[420px] overflow-y-auto`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white px-4 py-10 sm:py-16">
-      <div className="max-w-5xl mx-auto">
+    <div className="relative min-h-screen bg-[#05070d] text-white px-4 py-10 sm:py-16 overflow-hidden">
+      {/* Background: glow orbs + grid */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-32 w-[32rem] h-[32rem] bg-indigo-600/25 rounded-full blur-[120px]" />
+        <div className="absolute top-1/3 -right-40 w-[28rem] h-[28rem] bg-sky-500/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-1/4 w-[26rem] h-[26rem] bg-emerald-600/15 rounded-full blur-[120px]" />
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+      </div>
+
+      <div className="relative max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
@@ -105,7 +126,7 @@ const StudentRegistration = () => {
         </div>
 
         {/* Wallet card */}
-        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 sm:p-6 mb-6 shadow-lg shadow-black/20">
+        <div className={`${cardClass} mb-6`}>
           <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">Wallet</h2>
           {accountAddress ? (
             <div className="flex flex-wrap items-center gap-4">
@@ -150,72 +171,75 @@ const StudentRegistration = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Register */}
-          <section className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-lg shadow-black/20">
-            <h2 className="text-lg font-semibold mb-4">Register Student</h2>
-            <form onSubmit={handleRegister} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Student name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
-              />
-              <input
-                type="number"
-                placeholder="Age"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
-              />
-              <input
-                type="text"
-                placeholder="Course"
-                value={course}
-                onChange={(e) => setCourse(e.target.value)}
-                className="w-full bg-slate-900/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
-              />
-              <button
-                type="submit"
-                disabled={isRegistering || !accountAddress}
-                className="w-full bg-indigo-500 hover:bg-indigo-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2"
-              >
-                {isRegistering && (
-                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                )}
-                {isRegistering ? "Registering..." : "Register Student"}
-              </button>
-            </form>
-          </section>
-
-          {/* My Details */}
-          <section className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-lg shadow-black/20">
-            <h2 className="text-lg font-semibold mb-4">My Details</h2>
-            {!accountAddress ? (
-              <p className="text-slate-400 text-sm">Please connect your wallet.</p>
-            ) : !isRegistered ? (
-              <p className="text-slate-400 text-sm">You are not registered yet.</p>
-            ) : myDetails ? (
-              <div className="space-y-2 text-sm">
-                <p><span className="text-slate-400">Name:</span> <span className="font-medium">{myDetails.name}</span></p>
-                <p><span className="text-slate-400">Age:</span> <span className="font-medium">{myDetails.age}</span></p>
-                <p><span className="text-slate-400">Course:</span> <span className="font-medium">{myDetails.course}</span></p>
+        {/* Staggered row — both cards identical fixed size, offset per column */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:pb-12">
+          <div className="md:translate-y-0">
+            <section className={staggerCardClass}>
+              <h2 className="text-lg font-semibold mb-4">Register Student</h2>
+              <form onSubmit={handleRegister} className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Student name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-slate-900/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                />
+                <input
+                  type="number"
+                  placeholder="Age"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="w-full bg-slate-900/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                />
+                <input
+                  type="text"
+                  placeholder="Course"
+                  value={course}
+                  onChange={(e) => setCourse(e.target.value)}
+                  className="w-full bg-slate-900/60 border border-white/10 rounded-lg px-4 py-2.5 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                />
                 <button
-                  onClick={fetchMyDetails}
-                  className="mt-3 bg-slate-800 hover:bg-slate-700 transition-colors text-sm px-4 py-2 rounded-lg border border-white/10"
+                  type="submit"
+                  disabled={isRegistering || !accountAddress}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2"
                 >
-                  Refresh Details
+                  {isRegistering && (
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  )}
+                  {isRegistering ? "Registering..." : "Register Student"}
                 </button>
-              </div>
-            ) : (
-              <p className="text-slate-400 text-sm">Loading your details...</p>
-            )}
-          </section>
+              </form>
+            </section>
+          </div>
+
+          <div className="md:translate-y-10">
+            <section className={staggerCardClass}>
+              <h2 className="text-lg font-semibold mb-4">My Details</h2>
+              {!accountAddress ? (
+                <p className="text-slate-400 text-sm">Please connect your wallet.</p>
+              ) : !isRegistered ? (
+                <p className="text-slate-400 text-sm">You are not registered yet.</p>
+              ) : myDetails ? (
+                <div className="space-y-2 text-sm">
+                  <p><span className="text-slate-400">Name:</span> <span className="font-medium">{myDetails.name}</span></p>
+                  <p><span className="text-slate-400">Age:</span> <span className="font-medium">{myDetails.age}</span></p>
+                  <p><span className="text-slate-400">Course:</span> <span className="font-medium">{myDetails.course}</span></p>
+                  <button
+                    onClick={fetchMyDetails}
+                    className="mt-3 bg-slate-800 hover:bg-slate-700 transition-colors text-sm px-4 py-2 rounded-lg border border-white/10"
+                  >
+                    Refresh Details
+                  </button>
+                </div>
+              ) : (
+                <p className="text-slate-400 text-sm">Loading your details...</p>
+              )}
+            </section>
+          </div>
         </div>
 
         {/* Multicall */}
-        <section className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 mt-6 shadow-lg shadow-black/20">
+        <section className={`${cardClass} mt-6`}>
           <h2 className="text-lg font-semibold mb-1">Fetch All Students Using Multicall</h2>
           <p className="text-slate-400 text-sm mb-4">
             Add registered student wallet addresses, then fetch their details in one multicall.
